@@ -32,8 +32,6 @@ from that namespace.
 - Only the reserved `upstream/*` branch and tag namespaces are force-updated.
 - Local maintenance files and the maintenance branch are not overwritten by
   upstream changes.
-- Upstream refs that disappear are not automatically deleted from this mirror.
-  They remain available as preserved refs unless manually removed.
 - Before a non-fast-forward branch update, the workflow archives the previous
   branch head as an immutable tag under
   `archive/upstream-branch-heads/<commit-sha>`.
