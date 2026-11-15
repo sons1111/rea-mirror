@@ -33,6 +33,39 @@ jobs:
             '+refs/heads/*:refs/remotes/upstream/*' \
             '+refs/tags/*:refs/tags/upstream/*'
 
+      - name: Fetch previous mirror branch heads
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git ls-remote --heads origin 'refs/heads/upstream/*' | grep -q .; then
+            git fetch origin \
+              '+refs/heads/upstream/*:refs/remotes/mirror/upstream/*'
+          fi
+
+      - name: Archive rewritten upstream branch heads
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r current_ref; do
+            branch="${current_ref#refs/remotes/upstream/}"
+            previous_ref="refs/remotes/mirror/upstream/$branch"
+            if git show-ref --verify --quiet "$previous_ref"; then
+              previous_sha=$(git rev-parse "$previous_ref")
+              current_sha=$(git rev-parse "$current_ref")
+              if [[ "$previous_sha" != "$current_sha" ]] && ! git merge-base --is-ancestor "$previous_sha" "$current_sha"; then
+                archive_ref="refs/tags/archive/upstream-branch-heads/$previous_sha"
+                if ! git show-ref --verify --quiet "$archive_ref"; then
+                  git tag "${archive_ref#refs/tags/}" "$previous_sha"
+                fi
+              fi
+            fi
+          done < <(git for-each-ref --format='%(refname)' refs/remotes/upstream/)
+
+          if git for-each-ref --format='%(refname)' refs/tags/archive/upstream-branch-heads/ | grep -q .; then
+            git push origin \
+              'refs/tags/archive/upstream-branch-heads/*:refs/tags/archive/upstream-branch-heads/*'
+          fi
+
       - name: Fetch previous mirror tags
         shell: bash
         run: |
