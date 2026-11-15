@@ -50,8 +50,13 @@ After adding the workflow:
 4. Save the setting.
 5. Open Actions -> Upstream archive sync and run it once manually.
 
-The workflow requests only `contents: write` through the repository-scoped
-GITHUB_TOKEN. It does not need a personal access token.
+The workflow checks out the repository with the `MIRROR_SYNC_TOKEN` Actions secret.
+Create a fine-grained personal access token restricted to this repository with
+`Contents: read and write` and `Workflows: read and write`, then store it as
+`MIRROR_SYNC_TOKEN` under Settings -> Secrets and variables -> Actions.
+The token is required because upstream branches include `.github/workflows/*`
+files, which the default `GITHUB_TOKEN` cannot publish in this mirror operation.
+Never commit the token into the repository.
 
 ## Promotion and release policy
 
