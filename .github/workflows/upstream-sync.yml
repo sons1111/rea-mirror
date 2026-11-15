@@ -23,6 +23,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: true
+          token: ${{ secrets.MIRROR_SYNC_TOKEN }}
 
       - name: Fetch all upstream refs
         shell: bash
