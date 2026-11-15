@@ -33,6 +33,39 @@ jobs:
             '+refs/heads/*:refs/remotes/upstream/*' \
             '+refs/tags/*:refs/tags/upstream/*'
 
+      - name: Fetch previous mirror tags
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git ls-remote --tags origin 'refs/tags/upstream/*' | grep -q .; then
+            git fetch origin \
+              '+refs/tags/upstream/*:refs/tags/mirror/upstream/*'
+          fi
+
+      - name: Archive rewritten upstream tags
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r current_ref; do
+            tag_name="${current_ref#refs/tags/upstream/}"
+            previous_ref="refs/tags/mirror/upstream/$tag_name"
+            if git show-ref --verify --quiet "$previous_ref"; then
+              previous_oid=$(git rev-parse "$previous_ref")
+              current_oid=$(git rev-parse "$current_ref")
+              if [[ "$previous_oid" != "$current_oid" ]]; then
+                archive_ref="refs/tags/archive/upstream-tag-objects/$previous_oid"
+                if ! git show-ref --verify --quiet "$archive_ref"; then
+                  git tag "${archive_ref#refs/tags/}" "$previous_oid"
+                fi
+              fi
+            fi
+          done < <(git for-each-ref --format='%(refname)' refs/tags/upstream/)
+
+          if git for-each-ref --format='%(refname)' refs/tags/archive/upstream-tag-objects/ | grep -q .; then
+            git push origin \
+              'refs/tags/archive/upstream-tag-objects/*:refs/tags/archive/upstream-tag-objects/*'
+          fi
+
       - name: Publish namespaced upstream branches
         shell: bash
         run: |
