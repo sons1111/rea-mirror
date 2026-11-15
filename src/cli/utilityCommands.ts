@@ -1,3 +1,4 @@
+import { resolveJavaScriptMemberMutationAllowance } from "../config/javascriptMemberMutationAllowance.js";
 import { projectCliAnalysisResult } from "./projectCliAnalysisResult.js";
 import { z } from "incur";
 import { cliDecimalField } from "./options.js";
@@ -407,10 +408,18 @@ const registerReferenceSourceCommand = (
               error: "Import failed",
               ...projectAnalysisError(config.error),
             };
+          const memberMutationAllowance =
+            resolveJavaScriptMemberMutationAllowance(environment);
+          if (!memberMutationAllowance.ok)
+            return {
+              error: "Import failed",
+              ...projectAnalysisError(memberMutationAllowance.error),
+            };
           return withCommandCancellation((signal) =>
             runReferenceSourceImport(
               {
                 root: args.root,
+                memberMutationAllowance: memberMutationAllowance.value,
                 caller: "rea-cli",
                 policy: config.value.referenceSourcePolicy,
                 importer: PRODUCT_IDENTITY.packageName,
