@@ -34,9 +34,13 @@ from that namespace.
   upstream changes.
 - Upstream refs that disappear are not automatically deleted from this mirror.
   They remain available as preserved refs unless manually removed.
-- A branch that is force-pushed upstream may have its namespaced mirror ref
-  updated to the new head. For critical long-term archival, create an immutable
-  archive tag for the previous head before accepting that rewrite.
+- Before a non-fast-forward branch update, the workflow archives the previous
+  branch head as an immutable tag under
+  `archive/upstream-branch-heads/<commit-sha>`.
+- If an upstream tag object changes, the previous tag object is archived under
+  `archive/upstream-tag-objects/<object-sha>` before the namespaced tag moves.
+- Upstream branches and tags that disappear are not automatically deleted from
+  this mirror; old refs remain available unless manually removed.
 
 ## Required GitHub settings
 
